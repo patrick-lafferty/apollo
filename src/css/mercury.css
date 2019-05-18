@@ -1,0 +1,6 @@
+.app {
+    display: grid;
+    grid-template-areas: "docs display" "editor display";
+    grid-template-rows: 1fr 2fr;
+    height: 100vh;
+}
