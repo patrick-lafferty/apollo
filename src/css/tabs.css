@@ -1,0 +1,12 @@
+.tabList {
+    display: flex;
+}
+
+.tab {
+    padding: 0.5rem;
+    background: darkblue;
+}
+
+.tab--active {
+    background: skyblue;
+}
