@@ -1,68 +1,50 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+<p align="center">
+<img src="https://github.com/patrick-lafferty/saturn/blob/master/saturn_logo.png">
+</p>
 
-## Available Scripts
+# Apollo
+<img src="https://img.shields.io/badge/License-BSD%203--Clause-blue.svg">
 
-In the project directory, you can run:
+Apollo is <a href="https://github.com/patrick-lafferty/saturn">Saturn's</a> graphical UI framework. It uses a tiling window manager that splits up screen space into a hierarchy of tiles (application windows) and containers that arrange tiles horizontally or vertically. One of the main goals of Apollo is to support rapid UI prototyping. To accomplish this, Apollo uses a declarative layout language called Mercury. By editing Mercury files you can easily create and modify an application's UI. 
 
-### `npm start`
+# Features
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```lisp
+(grid
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
+    (rows (fixed-height 50) (proportional-height 1))
+    (columns (fixed-width 50) (proportional-width 1))
 
-### `npm test`
+    (items
+        
+        (label (caption "This is a label")
+            (alignment (vertical center))
+            (padding (horizontal 10))
+            (meta (grid (column 1))))
 
-Launches the test runner in the interactive watch mode.<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+        (list-view
+            (meta (grid (row 1) (column-span 2)))
+            (item-source (bind entries))
 
-### `npm run build`
+            (item-template
+                (label (caption (bind content))
+                    (background (bind background))
+                    (font-colour (bind fontColour)))))))
+```
 
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Apollo also makes heavy use of databinding. Certain UI elements like Labels
+expose properties that are 'bindable', such as caption and background. You
+can define properties in your application and then 'bind' them to elements,
+and when your values change it automatically updates the appropriate UI element.
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+Note that the example also shows item templates. You can create a collection
+of some user-defined struct, and by defining an item template you tell
+Apollo how to create UI elements from that struct.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Running
 
-### `npm run eject`
+TODO
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+# License
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
-
-### Analyzing the Bundle Size
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
-
-### Making a Progressive Web App
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
-
-### Advanced Configuration
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
-
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `npm run build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+Saturn uses the 3-clause BSD license.
