@@ -3,9 +3,9 @@ import ReactDOM from 'react-dom';
 import DocumentationViewer from './documentation';
 import Editor from './editor';
 import Display from './display';
-import './css/mercury.css';
+import './css/apollo.css';
 
-function MercuryApp() {
+function ApolloApp() {
     return (
         <main className="app">
             <DocumentationViewer />
@@ -16,5 +16,5 @@ function MercuryApp() {
 }
 
 ReactDOM.render(
-    <MercuryApp/>,
+    <ApolloApp/>,
     document.querySelector('#root'));
