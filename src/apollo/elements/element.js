@@ -26,21 +26,11 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import {getConstructor, SExpType} from '../parsing';
+import {getConstructor, SExpType, KnownElements} from '../parsing';
 import {Maybe} from '../../maybe';
-
-export class Configuration {
-    constructor() {
-        this.meta = null;
-        this.backgroundColour = "";
-        this.fontColour = "";
-        this.margins = {vertical: 0, horizontal: 0};
-        this.padding = {vertical: 0, horizontal: 0};
-        this.horizontalAlignment = Alignment.Start;
-        this.verticalAlignment = Alignment.Start;
-        this.fontSize = 14;
-    }
-}
+import {parseLabel, Label} from './label';
+import {parseMeta} from './container';
+import {Alignment} from './configuration';
 
 function parseMargins(margins, config) {
     if (margins.items.length === 1) {
@@ -81,12 +71,6 @@ function parseMargins(margins, config) {
     return true;
 }
 
-export const Alignment = Object.freeze({
-    Start: Symbol("Start"),
-    Center: Symbol("Center"),
-    End: Symbol("End")
-});
-
 function getAlignment(name) {
     if (name === "start") {
         return Alignment.Start;
@@ -113,7 +97,7 @@ function parseAlignment(alignment, config) {
 
         if (constructor.isSome()) {
             constructor = constructor.value();
-            
+
             if (constructor.length !== 2) {
                 return false;
             }
@@ -232,5 +216,39 @@ export function parseElement(element, config) {
 }
 
 export function createElement(parent, type, constructor) {
+    switch (type) {
+        case KnownElements.Label: {
+            let label = parseLabel(constructor.values)
+                .bind(config => Maybe.Some([config, Label.Create(config)]))
+                .bind(([config, label]) => {
+                    if (config.meta != null) {
+                        let meta = parseMeta(config.meta);
 
+                        if (meta.isSome()) {
+                            parent.addChild(label, meta.value());
+                        }
+                        else {
+                            parent.addChild(label);
+                        }
+                    }
+                    else {
+                        parent.addChild(label);
+                    }
+
+                    return Maybe.Some(label);
+                });
+
+            return label;
+        }
+        default: return Maybe.None();
+    }
+}
+
+export class Bounds {
+    constructor(x, y, width, height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    }
 }
