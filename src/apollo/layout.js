@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import {Maybe} from '../maybe';
 import {getConstructor, getConstructorType, KnownType, KnownContainers, SExpType} from './parsing';
-import {parseGrid, GridMetaId, createGrid} from './elements/grid';
-import {MetaData, MetaNamespace} from './elements/container';
+import {parseGrid, createGrid} from './elements/grid';
 import {createElement} from './elements/element';
+import {parseMeta} from './elements/container';
 
 function createItems(constructor, parent) {
     let first = true;
@@ -77,84 +77,14 @@ function createContainerItems(parent, itemList) {
         .bind(constructor => createItems(constructor, parent));
 }
 
-function parseGridMeta(grid, meta) {
-    let count = grid.values.items.length;
-
-    if (count < 2) {
-        return Maybe.None();
-    }
-
-    for (let i = 1; i < count; i++) {
-        let result = getConstructor(grid.values.items[i])
-            .bind(constructor => {
-                if (constructor.startsWith("row") && constructor.length === 2) {
-                    return constructor.get(1, SExpType.IntLiteral)
-                        .bind(value => {
-                            meta.push(new MetaData(MetaNamespace.Grid, GridMetaId.Row, value.vaue));
-                            return Maybe.Some(1);
-                        });
-                }
-                else if (constructor.startsWith("column") && constructor.length === 2) {
-                    return constructor.get(1, SExpType.IntLiteral)
-                        .bind(value => {
-                            meta.push(new MetaData(MetaNamespace.Grid, GridMetaId.Column, value.vaue));
-                            return Maybe.Some(1);
-                        });
-                }
-                else if (constructor.startsWith("row-span") && constructor.length === 2) {
-                    return constructor.get(1, SExpType.IntLiteral)
-                        .bind(value => {
-                            meta.push(new MetaData(MetaNamespace.Grid, GridMetaId.RowSpan, value.vaue));
-                            return Maybe.Some(1);
-                        });
-                }
-                else if (constructor.startsWith("column-span") && constructor.length === 2) {
-                    return constructor.get(1, SExpType.IntLiteral)
-                        .bind(value => {
-                            meta.push(new MetaData(MetaNamespace.Grid, GridMetaId.ColumnSpan, value.vaue));
-                            return Maybe.Some(1);
-                        });
-                } 
-                else {
-                    return Maybe.None();
-                }
-            });
-
-        if (!result.isSome()) {
-            return Maybe.None();
-        }
-    }
-
-    return Maybe.Some(grid);
-}
-
-function parseMeta(config) {
-    if (config.items.length < 2) {
-        return Maybe.None();
-    }
-
-    let meta = [];
-
-    for (let i = 1; i < config.items.length; i++) {
-        let result = getConstructor(config.items[i])
-            .bind(constructor => {
-                if (constructor.startsWith("grid")) {
-                    return parseGridMeta(constructor, meta);
-                }
-                else {
-                    return Maybe.Some(1);
-                }
-            });
-
-        if (!result.isSome()) {
-            return Maybe.None();
-        }
-    }
-
-    return Maybe.Some(meta);
-}
-
 function finishContainer(container, parent, meta) {
+    if (container.isSome()) {
+        container = container.value();
+    }
+    else {
+        return Maybe.None();
+    }
+
     if (meta !== null) {
         let metaData = parseMeta(meta);
 
@@ -177,13 +107,10 @@ export function createContainer(parent, type, constructor) {
         case KnownContainers.Grid: {
             let grid = parseGrid(constructor.values)
                 .bind(config => Maybe.Some([config, createGrid(config)]))
-                .bind(([config, grid]) => createContainerItems(grid, config.items));
+                .bind(([config, grid]) => Maybe.Some([config, createContainerItems(grid, config.items)]))
+                .bind(([config, grid]) => finishContainer(grid, parent, config.meta));
 
-            if (grid.isSome()) {
-                return finishContainer(grid.value(), parent);
-            }
-
-            break;
+            return grid;
         }
         case KnownContainers.ListView: {
             break;
