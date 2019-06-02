@@ -41,7 +41,7 @@ function bracketMatches(opener, closer) {
     }
 }
 
-class List {
+export class List {
     constructor(head) {
         if (typeof(head) !== 'undefined') {
             this.items = [head];
@@ -58,35 +58,35 @@ class List {
     }
 }
 
-class BoolLiteral {
+export class BoolLiteral {
     constructor(value) {
         this.value = value;
         this.type = SExpType.BoolLiteral;
     }
 }
 
-class IntLiteral {
+export class IntLiteral {
     constructor(value) {
         this.value = value;
         this.type = SExpType.IntLiteral;
     }
 }
 
-class StringLiteral {
+export class StringLiteral {
     constructor(value) {
         this.value = value;
         this.type = SExpType.StringLiteral;
     }
 }
 
-class SSymbol {
+export class SSymbol {
     constructor(value) {
         this.value = value;
         this.type = SExpType.Symbol;
     }
 }
 
-class ParseError {
+export class ParseError {
     constructor(message, line, column) {
         this.message = message;
         this.line = line;
@@ -94,7 +94,7 @@ class ParseError {
     }
 }
 
-class Constructor {
+export class Constructor {
     constructor(name, values, length) {
         this.name = name;
         this.values = values;
@@ -113,6 +113,37 @@ class Constructor {
             return null;
         }
     }
+}
+
+export const KnownContainers = Object.freeze({
+    Grid: Symbol("Grid"),
+    ListView: Symbol("ListView"),
+});
+
+export const KnownElements = Object.freeze({
+    Label: Symbol("Label"),
+});
+
+export const KnownType = Object.freeze({
+    Container: Symbol("Container"),
+    Element: Symbol("Element")
+});
+
+export function getConstructorType(constructor) {
+    //see if its a container first
+    if (constructor.startsWith("grid")) {
+        return [KnownType.Container, KnownContainers.Grid];
+    }
+    else if (constructor.startsWith("list-view")) {
+        return [KnownType.Container, KnownContainers.ListView];
+    }
+
+    //then see if its an element
+    if (constructor.startsWith("label")) {
+        return [KnownType.Element, KnownElements.Label];
+    }
+
+    return null;
 }
 
 function isDigit(c) {
@@ -138,7 +169,7 @@ const LiteralType = Object.freeze({
     String: Symbol("string")
 });
 
-const SExpType = Object.freeze({
+export const SExpType = Object.freeze({
     Symbol: Symbol("Symbol"),
     IntLiteral: Symbol("IntLiteral"),
     FloatLiteral: Symbol("FloatLiteral"),
@@ -147,7 +178,7 @@ const SExpType = Object.freeze({
     List: Symbol("List"),
 });
 
-function read(input) {
+export function read(input) {
     let brackets = [];
     let expressions = [];
     let currentLine = 0;
@@ -320,5 +351,3 @@ function read(input) {
 
     return new List(topLevelExpressions);
 }
-
-export {read}
