@@ -27,8 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 import {SExpType, getConstructor} from '../parsing';
-import {Configuration, parseElement} from './element';
-import {Container} from './container';
+import {parseElement, Bounds} from './element';
+import {Container, ContainedElement, MetaNamespace} from './container';
+import {Configuration} from './configuration';
 import {Maybe} from '../../maybe';
 
 export const GridMetaId = Object.freeze({
@@ -38,18 +39,93 @@ export const GridMetaId = Object.freeze({
     ColumnSpan: 4
 });
 
-export class Grid extends Container {
+class GridElement extends ContainedElement {
     constructor() {
+        super();
+        this.row = 0;
+        this.column = 0;
+        this.rowSpan = 0;
+        this.columnSpan = 0;
+    }
+}
+
+function getCellBounds(row, column) {
+    return new Bounds(column.startingPosition, row.startingPosition,
+            column.actualSpace, row.actualSpace);
+}
+
+export class Grid extends Container {
+    constructor(config) {
         super();
 
         this.children = [];
-        this.rows = [];
-        this.columns = [];
-        this.rowGap = 0;
-        this.columnGap = 0;
+        this.rows = config.rows;
+        this.columns = config.columns;
+        this.rowGap = config.rowGap;
+        this.columnGap = config.columnGap;
 
         this.itemSource = null;
         this.itemTemplate = null;
+    }
+
+    addChild(child, meta) {
+        let element = new GridElement();
+        element.element = child;
+
+        if (typeof meta !== "undefined") {
+            this.applyMetaData(element, meta);
+        }
+
+        element.bounds = getCellBounds(this.rows[element.row], this.columns[element.column]);
+        this.children.push(element);
+
+        child.setParent(this);
+    }
+
+    applyMetaData(element, meta) {
+        for (let data of meta) {
+            if (data.containerNamespace !== MetaNamespace.Grid) {
+                continue;
+            }
+
+            switch (data.metaId) {
+                case GridMetaId.Row: {
+                    element.row = Math.max(0,
+                            Math.min(data.value, this.rows.length - 1));
+                    break;
+                }
+                case GridMetaId.Column: {
+                    element.column = Math.max(0,
+                            Math.min(data.value, this.columns.length - 1));
+                    break;
+                }
+                case GridMetaId.RowSpan: {
+                    element.rowSpan = data.value;
+                    break;
+                }
+                case GridMetaId.ColumnSpan: {
+                    element.columnSpan = data.value;
+                    break;
+                }
+                default: break;
+            }
+        }
+
+        if (element.rowSpan > 0) {
+            let maxRow = element.row = element.rowSpan;
+
+            if (maxRow > this.rows.length) {
+                element.rowSpan = this.rows.length - element.row;
+            }
+        }
+
+        if (element.columnSpan > 0) {
+            let maxColumn = element.column + element.columnSpan;
+
+            if (maxColumn > this.columns.length) {
+                element.columnSpan = this.columns.length - element.column;
+            }
+        }
     }
 }
 
@@ -73,9 +149,11 @@ export const Unit = Object.freeze({
 });
 
 class RowColumnDefinition {
-    constructor(unit, value) {
+    constructor(unit, desiredSpace) {
         this.unit = unit;
-        this.value = value;
+        this.desiredSpace = desiredSpace;
+        this.actualSpace = 0;
+        this.startingPosition = 0;
     }
 }
 
@@ -175,7 +253,7 @@ export function parseGrid(grid) {
                     let value = constructor.get(1, SExpType.IntLiteral);
         
                     if (value.isSome()) {
-                        config.rowGap = value.value;
+                        config.rowGap = value.value();
                     }
                     else {
                         return Maybe.None();
@@ -189,7 +267,7 @@ export function parseGrid(grid) {
                     let value = constructor.get(1, SExpType.IntLiteral);
         
                     if (value.isSome()) {
-                        config.columnGap = value.value;
+                        config.columnGap = value.value();
                     }
                     else {
                         return Maybe.None();
