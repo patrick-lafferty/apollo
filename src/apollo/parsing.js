@@ -102,12 +102,12 @@ export class Constructor {
     }
 
     startsWith(str) {
-
+        return this.name.value === str;
     }
 
     get(index, type) {
-        if (this.values[index].type === type) {
-            return this.values[index];
+        if (this.values.items[index].type === type) {
+            return this.values.items[index];
         }
         else {
             return null;
@@ -144,6 +144,24 @@ export function getConstructorType(constructor) {
     }
 
     return null;
+}
+
+export function getConstructor(expression) {
+    if (expression.type !== SExpType.List) {
+        return null;
+    }
+
+    if (expression.items.length === 0) {
+        return null;
+    }
+
+    if (expression.items[0].type !== SExpType.Symbol) {
+        return null;
+    }
+
+    return new Constructor(expression.items[0],
+            expression,
+            expression.items.length);
 }
 
 function isDigit(c) {
@@ -349,5 +367,5 @@ export function read(input) {
         }
     }
 
-    return new List(topLevelExpressions);
+    return topLevelExpressions;
 }
