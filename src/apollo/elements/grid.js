@@ -28,9 +28,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import {SExpType, getConstructor} from '../parsing';
 import {Configuration, parseElement} from './element';
+import {Container} from './container';
+import {Maybe} from '../../maybe';
 
-export class Grid {
+export const GridMetaId = Object.freeze({
+    Row: 1,
+    Column: 2,
+    RowSpan: 3,
+    ColumnSpan: 4
+});
 
+export class Grid extends Container {
+    constructor() {
+        super();
+
+        this.children = [];
+        this.rows = [];
+        this.columns = [];
+        this.rowGap = 0;
+        this.columnGap = 0;
+
+        this.itemSource = null;
+        this.itemTemplate = null;
+    }
 }
 
 class GridConfiguration extends Configuration {
@@ -65,27 +85,28 @@ function parseRowColumn(config, definitions, proportional, fixed) {
     }
 
     for (let i = 1; i < config.items.length; i++) {
-        let constructor = getConstructor(config.items[i]);
+        let constructor = getConstructor(config.items[i])
+            .bind(constructor => {
+                return constructor.get(1, SExpType.IntLiteral)
+                    .bind(value => {
+                        if (constructor.startsWith(proportional)) {
+                            definitions.push(new RowColumnDefinition(Unit.Proportional, value.value));
+                        }
+                        else if (constructor.startsWith(fixed)) {
+                            definitions.push(new RowColumnDefinition(Unit.Fixed, value.value));
+                        }
+                        else {
+                            return Maybe.None();
+                        }
 
-        if (constructor === null) {
+                        return Maybe.Some(1);
+                    });
+            });
+        
+        if (!constructor.isSome()) {
             return false;
         }
 
-        let value = constructor.get(1, SExpType.IntLiteral);
-
-        if (value == null) {
-            return false;
-        }
-
-        if (constructor.startsWith(proportional)) {
-            definitions.push(new RowColumnDefinition(Unit.Proportional, value.value));
-        }
-        else if (constructor.startsWith(fixed)) {
-            definitions.push(new RowColumnDefinition(Unit.Fixed, value.value));
-        }
-        else {
-            return false;
-        }
     }
 
     return true;
@@ -94,7 +115,7 @@ function parseRowColumn(config, definitions, proportional, fixed) {
 export function parseGrid(grid) {
 
     if (grid.type !== SExpType.List) {
-        return null;
+        return Maybe.None();
     }
 
     let config = new GridConfiguration();
@@ -106,80 +127,93 @@ export function parseGrid(grid) {
 
             if (item.type !== SExpType.Symbol
                     || item.value !== "grid") {
-                return null;
+                return Maybe.None();
             }
 
             continue;
         }
 
-        let constructor = getConstructor(item);
+        let constructor = getConstructor(item)
+            .bind(constructor => {
+                if (constructor.startsWith("rows")) {
+                    if (!parseRowColumn(constructor.values, config.rows, 
+                            "proportional-height", "fixed-height")) {
+                        return Maybe.None();
+                    }
+                }
+                else if (constructor.startsWith("columns")) {
+                    if (!parseRowColumn(constructor.values, config.columns,
+                            "proportional-width", "fixed-width")) {
+                        return Maybe.None();
+                    }
+                }
+                else if (constructor.startsWith("items")) {
+                    config.items = constructor.values;
+                }
+                else if (constructor.startsWith("item-source")) {
+                    let itemSource = constructor.get(1, SExpType.List);
+        
+                    if (itemSource.isSome()) {
+                        config.itemSource = itemSource.value();
+                    }
+                }
+                else if (constructor.startsWith("item-template")) {
+                    let template = constructor.get(1, SExpType.List);
+        
+                    if (template.isSome()) {
+                        config.itemTemplate = template.value();
+                    }
+                }
+                else if (constructor.startsWith("meta")) {
+                    config.meta = constructor.values;
+                }
+                else if (constructor.startsWith("row-gap")) {
+                    if (constructor.length !== 2) {
+                        return Maybe.None();
+                    }
+        
+                    let value = constructor.get(1, SExpType.IntLiteral);
+        
+                    if (value.isSome()) {
+                        config.rowGap = value.value;
+                    }
+                    else {
+                        return Maybe.None();
+                    }
+                }
+                else if (constructor.startsWith("column-gap")) {
+                    if (constructor.length !== 2) {
+                        return Maybe.None();
+                    }
+        
+                    let value = constructor.get(1, SExpType.IntLiteral);
+        
+                    if (value.isSome()) {
+                        config.columnGap = value.value;
+                    }
+                    else {
+                        return Maybe.None();
+                    }
+                }
+                else if (!parseElement(item, config)) {
+                    return Maybe.None();
+                }
 
-        if (constructor == null) {
-            return null;
-        }
+                return Maybe.Some(constructor);
+            });
 
-        if (constructor.startsWith("rows")) {
-            if (!parseRowColumn(constructor.values, config.rows, 
-                    "proportional-height", "fixed-height")) {
-                return null;
-            }
-        }
-        else if (constructor.startsWith("columns")) {
-            if (!parseRowColumn(constructor.values, config.columns,
-                    "proportional-width", "fixed-width")) {
-                return null;
-            }
-        }
-        else if (constructor.startsWith("items")) {
-            config.items = constructor.values;
-        }
-        else if (constructor.startsWith("item-source")) {
-            let itemSource = constructor.get(1, SExpType.List);
-
-            if (itemSource !== null) {
-                config.itemSource = itemSource;
-            }
-        }
-        else if (constructor.startsWith("item-template")) {
-            let template = constructor.get(1, SExpType.List);
-
-            if (template !== null) {
-                config.itemTemplate = template;
-            }
-        }
-        else if (constructor.startsWith("meta")) {
-            config.meta = constructor.values;
-        }
-        else if (constructor.startsWith("row-gap")) {
-            if (constructor.length !== 2) {
-                return null;
-            }
-
-            let value = constructor.get(1, SExpType.IntLiteral);
-
-            if (value === null) {
-                return null;
-            }
-
-            config.rowGap = value.value;
-        }
-        else if (constructor.startsWith("column-gap")) {
-            if (constructor.length !== 2) {
-                return null;
-            }
-
-            let value = constructor.get(1, SExpType.IntLiteral);
-
-            if (value === null) {
-                return null;
-            }
-
-            config.columnGap = value.value;
-        }
-        else if (!parseElement(item, config)) {
-            return null;
+        if (!constructor.isSome()) {
+            return Maybe.None();
         }
     }
 
-    return config;
+    return Maybe.Some(config);
+}
+
+export function createGrid(config) {
+    let grid = new Grid(config);
+
+    //TODO: setup itemsource binding, see grid.h: 94
+
+    return grid;
 }

@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 import {getConstructor, SExpType} from '../parsing';
+import {Maybe} from '../../maybe';
 
 export class Configuration {
     constructor() {
@@ -51,27 +52,29 @@ function parseMargins(margins, config) {
 
         let constructor = getConstructor(margins.items[i]);
 
-        if (constructor !== null) {
+        if (constructor.isSome()) {
+            constructor = constructor.value();
+
             if (constructor.length !== 2) {
                 return false;
             }
 
             let value = constructor.get(1, SExpType.IntLiteral);
 
-            if (value !== null) {
+            if (value.isSome()) {
                 if (constructor.startsWith("vertical")) {
-                    config.vertical = value.value;
+                    config.vertical = value.value().value;
                     failed = false;
                 }
                 else if (constructor.startsWith("horizontal")) {
-                    config.horizontal = value.value;
+                    config.horizontal = value.value().value;
                     failed = false;
                 }
             }
         }
 
         if (failed) {
-            return null;
+            return false;
         }
     }
 
@@ -108,16 +111,18 @@ function parseAlignment(alignment, config) {
 
         let constructor = getConstructor(alignment.items[i]);
 
-        if (constructor !== null) {
+        if (constructor.isSome()) {
+            constructor = constructor.value();
+            
             if (constructor.length !== 2) {
                 return false;
             }
 
             let value = constructor.get(1, SExpType.Symbol);
 
-            if (value !== null) {
+            if (value.isSome()) {
                 if (constructor.startsWith("vertical")) {
-                    let maybeAlignment = getAlignment(value.value);
+                    let maybeAlignment = getAlignment(value.value().value);
                     
                     if (maybeAlignment !== null) {
                         config.verticalAlignment = maybeAlignment;
@@ -125,7 +130,7 @@ function parseAlignment(alignment, config) {
                     }
                 }
                 else if (constructor.startsWith("horizontal")) {
-                    let maybeAlignment = getAlignment(value.value);
+                    let maybeAlignment = getAlignment(value.value().value);
                     
                     if (maybeAlignment !== null) {
                         config.horizontalAlignment = maybeAlignment;
@@ -144,73 +149,60 @@ function parseAlignment(alignment, config) {
 }
 
 function parseColour(constructor) {
-    let colour = constructor.get(1, SExpType.List);
+    return constructor.get(1, SExpType.List)
+        .bind(colour => getConstructor(colour))
+        .bind(colourConstructor => {
+            if (colourConstructor.startsWith("rgb")) {
+                if (colourConstructor.length !== 4) {
+                    return Maybe.None();
+                }
+        
+                return colourConstructor.get(1, SExpType.IntLiteral)
+                    .bind(r => colourConstructor.get(2, SExpType.IntLiteral)    
+                        .bind(g => colourConstructor.get(3, SExpType.IntLiteral)
+                            .bind(b => {
+                                return Maybe.Some("rgb(" + r + "," + g + "," + b + ")");
+                            })));
+            }
+            else if (colourConstructor.startsWith("bind")) {
+                console.log("TODO: colour binding not supported");
+            }
 
-    if (colour === null) {
-        return null;
-    }
-
-    let colourConstructor = getConstructor(colour);
-
-    if (colourConstructor === null) {
-        return null;
-    }
-
-    if (colourConstructor.startsWith("rgb")) {
-        if (colourConstructor.length !== 4) {
-            return null;
-        }
-
-        let r = colourConstructor.get(1, SExpType.IntLiteral);
-        let g = colourConstructor.get(2, SExpType.IntLiteral);
-        let b = colourConstructor.get(3, SExpType.IntLiteral);
-
-        if (r !== null && g !== null && b !== null) {
-            return "rgb(" + r + "," + g + "," + b + ")";
-        }
-    }
-    else if (colourConstructor.startsWith("bind")) {
-        console.log("TODO: colour binding not supported");
-    }
-
-    return null;
+            return Maybe.None();
+        });
 }
 
 function getColour(constructor) {
     if (constructor.length !== 2) {
-        return false;
+        return Maybe.None();
     }
 
-    let colour = parseColour(constructor);
-
-    if (colour === null) {
-        return false;
-    }
-
-    return colour;
+    return parseColour(constructor);
 }
 
 export function parseElement(element, config) {
     let constructor = getConstructor(element);
 
-    if (constructor !== null) {
+    if (constructor.isSome()) {
+        constructor = constructor.value();
+
         if (constructor.startsWith("background")) {
             let colour = getColour(constructor);
 
-            if (colour === false) {
+            if (!colour.isSome()) {
                 return false;
             }
 
-            config.backgroundColour = colour;
+            config.backgroundColour = colour.value();
         }
         else if (constructor.startsWith("font-colour")) {
             let colour = getColour(constructor);
 
-            if (colour === false) {
+            if (!colour.isSome()) {
                 return false;
             }
 
-            config.fontColour = colour;
+            config.fontColour = colour.value();
         }
         else if (constructor.startsWith("margins")) {
             return parseMargins(constructor.values, config.margins);
@@ -228,13 +220,17 @@ export function parseElement(element, config) {
 
             let fontSize = constructor.get(1, SExpType.IntLiteral);
 
-            if (fontSize === null) {
+            if (!fontSize.isSome()) {
                 return false;
             }
 
-            config.fontSize = fontSize;
+            config.fontSize = fontSize.value();
         }
     }
 
     return true;
+}
+
+export function createElement(parent, type, constructor) {
+
 }

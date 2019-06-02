@@ -26,6 +26,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+import {Maybe} from '../maybe';
+
 function bracketMatches(opener, closer) {
     if (opener === '(') {
         return closer === ')';
@@ -107,10 +109,10 @@ export class Constructor {
 
     get(index, type) {
         if (this.values.items[index].type === type) {
-            return this.values.items[index];
+            return Maybe.Some(this.values.items[index]);
         }
         else {
-            return null;
+            return Maybe.None();
         }
     }
 }
@@ -132,36 +134,36 @@ export const KnownType = Object.freeze({
 export function getConstructorType(constructor) {
     //see if its a container first
     if (constructor.startsWith("grid")) {
-        return [KnownType.Container, KnownContainers.Grid];
+        return Maybe.Some([KnownType.Container, KnownContainers.Grid]);
     }
     else if (constructor.startsWith("list-view")) {
-        return [KnownType.Container, KnownContainers.ListView];
+        return Maybe.Some([KnownType.Container, KnownContainers.ListView]);
     }
 
     //then see if its an element
     if (constructor.startsWith("label")) {
-        return [KnownType.Element, KnownElements.Label];
+        return Maybe.Some([KnownType.Element, KnownElements.Label]);
     }
 
-    return null;
+    return Maybe.None();
 }
 
 export function getConstructor(expression) {
     if (expression.type !== SExpType.List) {
-        return null;
+        return Maybe.None();
     }
 
     if (expression.items.length === 0) {
-        return null;
+        return Maybe.None();
     }
 
     if (expression.items[0].type !== SExpType.Symbol) {
-        return null;
+        return Maybe.None();
     }
 
-    return new Constructor(expression.items[0],
+    return Maybe.Some(new Constructor(expression.items[0],
             expression,
-            expression.items.length);
+            expression.items.length));
 }
 
 function isDigit(c) {
