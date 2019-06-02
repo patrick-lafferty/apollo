@@ -26,39 +26,192 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import {getConstructor, getConstructorType, KnownType, KnownContainers} from './parsing';
-import {parseGrid} from './elements/grid';
+import {Maybe} from '../maybe';
+import {getConstructor, getConstructorType, KnownType, KnownContainers, SExpType} from './parsing';
+import {parseGrid, GridMetaId, createGrid} from './elements/grid';
+import {MetaData, MetaNamespace} from './elements/container';
+import {createElement} from './elements/element';
+
+function createItems(constructor, parent) {
+    let first = true;
+
+    for (let item of constructor.values.items) {
+        if (first) {
+            if (item.type !== SExpType.Symbol
+                    || item.value !== 'items') {
+                return Maybe.None();
+            }
+
+            first = false;
+            continue;
+        }
+
+        let child = getConstructor(item)
+            .bind(constructor => {
+                return getConstructorType(constructor)
+                    .bind(type => Maybe.Some([constructor, type]));
+            })
+            .bind(([constructor, type]) => {
+                if (type[0] === KnownType.Container) {
+                    return createContainer(parent, type[1], constructor);
+                }
+                else {
+                    return createElement(parent, type[1], constructor);
+                }
+            });
+
+        if (!child.isSome()) {
+            return Maybe.None();
+        }
+    }
+
+    return Maybe.Some(parent);
+}
+
+function createContainerItems(parent, itemList) {
+    if (itemList === null || itemList.type !== SExpType.List) {
+        return Maybe.None();
+    }
+
+    return getConstructor(itemList)
+        .bind(constructor => createItems(constructor, parent));
+}
+
+function parseGridMeta(grid, meta) {
+    let count = grid.values.items.length;
+
+    if (count < 2) {
+        return Maybe.None();
+    }
+
+    for (let i = 1; i < count; i++) {
+        let result = getConstructor(grid.values.items[i])
+            .bind(constructor => {
+                if (constructor.startsWith("row") && constructor.length === 2) {
+                    return constructor.get(1, SExpType.IntLiteral)
+                        .bind(value => {
+                            meta.push(new MetaData(MetaNamespace.Grid, GridMetaId.Row, value.vaue));
+                            return Maybe.Some(1);
+                        });
+                }
+                else if (constructor.startsWith("column") && constructor.length === 2) {
+                    return constructor.get(1, SExpType.IntLiteral)
+                        .bind(value => {
+                            meta.push(new MetaData(MetaNamespace.Grid, GridMetaId.Column, value.vaue));
+                            return Maybe.Some(1);
+                        });
+                }
+                else if (constructor.startsWith("row-span") && constructor.length === 2) {
+                    return constructor.get(1, SExpType.IntLiteral)
+                        .bind(value => {
+                            meta.push(new MetaData(MetaNamespace.Grid, GridMetaId.RowSpan, value.vaue));
+                            return Maybe.Some(1);
+                        });
+                }
+                else if (constructor.startsWith("column-span") && constructor.length === 2) {
+                    return constructor.get(1, SExpType.IntLiteral)
+                        .bind(value => {
+                            meta.push(new MetaData(MetaNamespace.Grid, GridMetaId.ColumnSpan, value.vaue));
+                            return Maybe.Some(1);
+                        });
+                } 
+                else {
+                    return Maybe.None();
+                }
+            });
+
+        if (!result.isSome()) {
+            return Maybe.None();
+        }
+    }
+
+    return Maybe.Some(grid);
+}
+
+function parseMeta(config) {
+    if (config.items.length < 2) {
+        return Maybe.None();
+    }
+
+    let meta = [];
+
+    for (let i = 1; i < config.items.length; i++) {
+        let result = getConstructor(config.items[i])
+            .bind(constructor => {
+                if (constructor.startsWith("grid")) {
+                    return parseGridMeta(constructor, meta);
+                }
+                else {
+                    return Maybe.Some(1);
+                }
+            });
+
+        if (!result.isSome()) {
+            return Maybe.None();
+        }
+    }
+
+    return Maybe.Some(meta);
+}
+
+function finishContainer(container, parent, meta) {
+    if (meta !== null) {
+        let metaData = parseMeta(meta);
+
+        if (metaData.isSome()) {
+            parent.addChild(container, metaData.value());
+        }
+        else {
+            parent.addChild(container);
+        }
+    }
+    else {
+        parent.addChild(container);
+    }
+
+    return Maybe.Some(container);
+}
 
 export function createContainer(parent, type, constructor) {
     switch (type) {
         case KnownContainers.Grid: {
-            let config = parseGrid(constructor.values);
-            console.log(config);
+            let grid = parseGrid(constructor.values)
+                .bind(config => Maybe.Some([config, createGrid(config)]))
+                .bind(([config, grid]) => createContainerItems(grid, config.items));
+
+            if (grid.isSome()) {
+                return finishContainer(grid.value(), parent);
+            }
+
             break;
         }
         case KnownContainers.ListView: {
             break;
         }
-        default: return null;
+        default: return Maybe.None();
     }
+
+    return Maybe.None();
 }
 
 export function loadLayout(root, window) {
-    let constructor = getConstructor(root);
-
-    if (constructor === null) {
-        return null;
+    let container = getConstructor(root)
+        .bind(constructor => {
+            return getConstructorType(constructor)
+                .bind(type => Maybe.Some([constructor, type]));  
+        })
+        .bind(([constructor, type]) => {
+            if (type[0] === KnownType.Container) {
+                return createContainer(window, type[1], constructor);
+            }  
+            else {
+                return Maybe.None();
+            }
+        });
+    
+    if (container.isSome()) {
+        return container.value();
     }
-
-    let type = getConstructorType(constructor);
-
-    if (type == null) {
-        return null;
-    }
-
-    if (type[0] === KnownType.Container) {
-        return createContainer(window, type[1], constructor);
-    }  
     else {
         return null;
     }
