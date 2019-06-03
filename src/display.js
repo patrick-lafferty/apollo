@@ -37,6 +37,7 @@ class Display extends React.Component {
     constructor(props) {
         super(props);
         this.canvas = null;
+        this.context = null;
         this.display = 
             <section className="display">
                 <canvas id="framebuffer" className="fullsize" ref={node => {
@@ -63,14 +64,24 @@ class Display extends React.Component {
 
         let result = read(layout);
 
-        if (result !== null) {
-            let root = result.items[0];
-            let r = loadLayout(root, this.window);
+        if (this.renderer !== null)  {
+            this.renderer.clear();
+        }
 
-            if (r != null) {
-                this.window.layoutChildren();
-                //window.layoutText()
-                this.window.render();
+        if (result !== null) {
+            try {
+                let root = result.items[0];
+                let r = loadLayout(root, this.window);
+
+                if (r != null) {
+                    this.window.layoutChildren();
+                    //window.layoutText()
+                    this.window.render();
+                }
+            }
+            catch (exception) {
+                //TODO: put logging where display area is
+                console.log(exception);
             }
         }
     }
