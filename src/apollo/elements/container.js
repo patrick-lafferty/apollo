@@ -94,6 +94,10 @@ export function parseMeta(config) {
 
 export class Container extends UIElement {
 
+    /*
+    Forwards text layout requests up the ui hierarchy until it
+    reaches the Window, which is capable of performing the request.
+    */
     requestTextLayout(element) {
 
         if (this.parent != null) {
@@ -101,6 +105,10 @@ export class Container extends UIElement {
         }
     }
 
+    /*
+    Forwards render requests up the ui hierarchy until it
+    reaches the Window, which is capable of performing the request.
+    */
     requestRender(element) {
 
         if (this.parent != null) {
