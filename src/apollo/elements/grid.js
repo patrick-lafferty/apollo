@@ -54,9 +54,33 @@ function getCellBounds(row, column) {
             column.actualSpace, row.actualSpace);
 }
 
+function getSpannedCellBounds(rows, columns, element) {
+    
+    let bounds = new Bounds(columns[element.column].startingPosition, 
+            rows[element.row].startingPosition,
+            columns[element.column].actualSpace, 
+            rows[element.row].actualSpace);
+
+    if (element.rowSpan > 0) {
+        let row = rows[element.row + element.rowSpan - 1];
+        bounds.height = row.startingPosition + row.actualSpace - bounds.y;
+    }
+
+    if (element.columnSpan > 0) {
+        let column = columns[element.column + element.columnSpan - 1];
+        bounds.width = column.startingPosition + column.actualSpace - bounds.x;
+    }
+
+    return bounds;
+}
+
+/*
+A Grid is a container that arranges multiple child
+elements in rows and columns.
+*/
 export class Grid extends Container {
     constructor(config) {
-        super();
+        super(config);
 
         this.children = [];
         this.rows = config.rows;
@@ -125,6 +149,99 @@ export class Grid extends Container {
             if (maxColumn > this.columns.length) {
                 element.columnSpan = this.columns.length - element.column;
             }
+        }
+    }
+
+    allocateDefinitionSpace(definitions, unallocatedSpace, currentPosition, gap) {
+        let totalProportionalUnits = 0;
+
+        if (gap.value > 0) {
+            unallocatedSpace -= gap.value * (definitions.length - 1);
+        }
+
+        for (let definition of definitions) {
+            if (definition.unit === Unit.Fixed) {
+                if (unallocatedSpace > 0) {
+                    let space = Math.min(unallocatedSpace, definition.desiredSpace);
+                    definition.actualSpace = space;
+                    unallocatedSpace -= space;
+                }
+                else {
+                    break;
+                }
+            }
+            else {
+                totalProportionalUnits += definition.desiredSpace;
+            }
+        }
+
+        if (totalProportionalUnits > 0 
+            && unallocatedSpace > 0) {
+
+            let proportionalSpace = unallocatedSpace / totalProportionalUnits;
+            
+            for (let definition of definitions) {
+                if (definition.unit === Unit.Proportional) {
+                    definition.actualSpace = proportionalSpace * definition.desiredSpace;
+                }
+            }
+        }
+
+        for (let definition of definitions) {
+            definition.startingPosition = currentPosition;
+            currentPosition += definition.actualSpace + gap.value;
+        }
+    }
+
+    calculateGridDimensions() {
+        let bounds = this.getBounds();
+
+        this.allocateDefinitionSpace(this.rows, bounds.height, bounds.y, this.rowGap);
+        this.allocateDefinitionSpace(this.columns, bounds.width, bounds.x, this.columnGap);
+    }
+
+    /*
+    Arranges the children in some fashion by calculating each
+    child element's bounds
+    */
+    layoutChildren() {
+        if (this.children.length === 0) {
+            return;
+        }
+
+        this.calculateGridDimensions();
+
+        for (let child of this.children) {
+            if (child.rowSpan > 0 || child.columnSpan > 0) {
+                child.bounds = getSpannedCellBounds(this.rows, this.columns, child);
+            }
+            else {
+                child.bounds = getCellBounds(this.rows[child.row], this.columns[child.column]);
+            }
+
+            if (child.element instanceof Container) {
+                child.element.layoutChildren();
+            }
+        }
+    }
+
+    /*
+    Returns the bounds of the given child. Bounds are calculated
+    in a layoutChildren call and stored in the ContainedElement
+    */
+    getChildBounds(child) {
+        for (let element of this.children) {
+            if (element === child) {
+                return element.bounds;
+            }
+        }
+
+        return new Bounds();
+    }
+
+    render(renderer, bounds, clip) {
+        for (let element of this.children) {
+            element.element.render(renderer, element.bounds, bounds);
         }
     }
 }

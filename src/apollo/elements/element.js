@@ -145,7 +145,7 @@ function parseColour(constructor) {
                     .bind(r => colourConstructor.get(2, SExpType.IntLiteral)    
                         .bind(g => colourConstructor.get(3, SExpType.IntLiteral)
                             .bind(b => {
-                                return Maybe.Some("rgb(" + r + "," + g + "," + b + ")");
+                                return Maybe.Some("rgb(" + r.value + "," + g.value + "," + b.value + ")");
                             })));
             }
             else if (colourConstructor.startsWith("bind")) {
