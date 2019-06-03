@@ -4,6 +4,12 @@ export class Renderer  {
         this.context = this.canvas.getContext('2d');
     }
 
+    clear() {
+
+        this.context.fillStyle = 'rgba(255,255,255,1)';
+        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
     drawRectangle(colour, bounds, clip) {
         let windowWidth = this.canvas.clientWidth;
         let windowHeight = this.canvas.clientHeight;
@@ -44,6 +50,7 @@ export class Renderer  {
     }
 
     drawText(layout, bounds, clip, backgroundColour) {
-
+        this.context.fillStyle = 'rgb(0,0,0)';
+        this.context.fillText(layout, bounds.x, bounds.y);
     }
 }
