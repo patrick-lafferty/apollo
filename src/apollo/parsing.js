@@ -352,7 +352,7 @@ export function read(input) {
                         return new ParseError("Float parsing not implemented", currentLine, currentColumn);
                     }
                     case LiteralType.String: {
-                        top.add(new StringLiteral(input.slice(i + 1, j - i - 2)));
+                        top.add(new StringLiteral(input.slice(i + 1, j - 1)));
                         break;
                     }
                     case LiteralType.None: {
