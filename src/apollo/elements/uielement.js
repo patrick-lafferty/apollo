@@ -74,8 +74,11 @@ export class UIElement {
     getParent() { return this.parent; }
     setParent(parent) { this.parent = parent; }
 
-    getBounds() { 
-        let bounds = this.parent.getChildBounds(this);
+    getBounds(bounds = null) { 
+        if (bounds == null) {
+            bounds = this.parent.getChildBounds(this);
+        }
+
         let horizontalMarginSpace = 2 * this.margins.horizontal;
 
         if (bounds.width > horizontalMarginSpace) {

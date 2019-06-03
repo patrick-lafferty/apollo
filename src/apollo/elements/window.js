@@ -38,6 +38,7 @@ export class UIWindow extends Container {
     }
 
     render() {
+        
         if (this.child != null) {
             let bounds = this.getChildBounds(null);
             this.child.render(this.renderer, bounds, bounds);

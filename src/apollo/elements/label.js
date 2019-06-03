@@ -29,18 +29,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import {Maybe} from '../../maybe';
 import {SExpType, getConstructor} from '../parsing';
 import {parseElement} from './element';
-import {UIElement, /*adjustForAlignment*/} from './uielement';
+import {UIElement, adjustForAlignment} from './uielement';
 import {Configuration} from './configuration';
 
 export class LabelConfiguration extends Configuration {
     constructor() {
         super();
 
-        this.caption = null;
+        this.caption = "";
     }
 }
 
 export class Label extends UIElement {
+
+    constructor(config) {
+        super(config);
+
+        this.caption = config.caption;
+    }
 
     static Create(config) {
         let label = new Label(config);
@@ -52,7 +58,8 @@ export class Label extends UIElement {
 
     render(renderer, bounds, clip) {
         //TODO: caption binding, see label.h:141
-        let captionText = this.caption;
+        let captionText = this.caption.value;
+        bounds = this.getBounds(bounds);
 
         renderer.drawRectangle(this.backgroundColour, bounds, clip);
 
@@ -69,9 +76,9 @@ export class Label extends UIElement {
             this.verticalAlignment, 
             bounds.height, 
             captionLayout.bounds.height);
-        bounds.y += padding.vertical;
+        bounds.y += padding.vertical;*/
 
-        renderer.drawText(captionLayout, bounds, clip, this.backgroundColour);*/
+        renderer.drawText(captionText/*Layout*/, bounds, clip, this.backgroundColour);
     }
 }
 

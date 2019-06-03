@@ -231,7 +231,7 @@ export class Grid extends Container {
     */
     getChildBounds(child) {
         for (let element of this.children) {
-            if (element === child) {
+            if (element.element === child) {
                 return element.bounds;
             }
         }
