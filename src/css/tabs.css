@@ -10,3 +10,7 @@
 .tab--active {
     background: skyblue;
 }
+
+.expand {
+    height: 100%;
+}
