@@ -7,6 +7,8 @@
 
 Apollo is <a href="https://github.com/patrick-lafferty/saturn">Saturn's</a> graphical UI framework. It uses a tiling window manager that splits up screen space into a hierarchy of tiles (application windows) and containers that arrange tiles horizontally or vertically. One of the main goals of Apollo is to support rapid UI prototyping. To accomplish this, Apollo uses a declarative layout language called Mercury. By editing Mercury files you can easily create and modify an application's UI. 
 
+<a href="https://patrick-lafferty.github.io/apollo/">View it live here!</a>
+
 # Features
 
 ```lisp
@@ -42,6 +44,10 @@ of some user-defined struct, and by defining an item template you tell
 Apollo how to create UI elements from that struct.
 
 # Running
+
+An interactive Apollo editor is hosted <a href="https://patrick-lafferty.github.io/apollo/">here!</a>
+
+# Features
 
 TODO
 
