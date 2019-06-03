@@ -50,7 +50,7 @@ class Layout extends React.Component {
     }
 }
 
-const Code = () => <p>Code</p>;
+const Code = () => <p>Code<br/>TODO</p>;
 
 class Editor extends React.Component {
 
