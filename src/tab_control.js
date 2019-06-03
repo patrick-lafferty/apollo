@@ -23,7 +23,7 @@ class TabControl extends React.Component {
         let contents = this.props.children.find(tab => tab.props.label === this.state.activeTab);
 
         return (
-            <div>
+            <div className='expand'>
                 <div className="tabList">{tabs}</div>
 
                 {contents}
