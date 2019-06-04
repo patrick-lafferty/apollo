@@ -38,7 +38,8 @@ class ApolloApp extends React.Component {
     constructor(props) {
         super(props);
         this.handleLayoutChanged = this.handleLayoutChanged.bind(this);
-        this.state = {layout: ''};
+        this.showDocumentation = this.showDocumentation.bind(this);
+        this.state = {layout: '', candidate: ''};
 
         setTimeout(() => this.handleLayoutChanged(ExampleLayout), 300);
     }
@@ -47,11 +48,17 @@ class ApolloApp extends React.Component {
         this.setState({layout: layout});
     }
 
+    showDocumentation(candidate) {
+        this.setState({candidate: candidate});
+    }
+
     render() {
         return (
             <main className="app">
-                <DocumentationViewer />
-                <Editor handleLayoutChanged={this.handleLayoutChanged} initialLayout={this.state.layout}/>
+                <DocumentationViewer candidate={this.state.candidate}/>
+                <Editor handleLayoutChanged={this.handleLayoutChanged} 
+                    showDocumentation={this.showDocumentation}
+                    initialLayout={this.state.layout}/>
                 <Display layout={this.state.layout} />
             </main>
         );

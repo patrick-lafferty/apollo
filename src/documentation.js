@@ -27,10 +27,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 import React from 'react';
-import './css/documentation.css';
 import TabControl from './tab_control';
+import './css/documentation.css';
 
-const Info = () => (<p>This is a live demo of Apollo UI layouts 
+const Info = () => (<p className="docViewer">This is a live demo of Apollo UI layouts 
         for the <a href="https://saturn-os.org" target="blank">Saturn OS</a>
         <br/>
         <br/>
@@ -38,15 +38,64 @@ const Info = () => (<p>This is a live demo of Apollo UI layouts
         You can edit the layout in the editor below, which will be parsed
         and rendered in the canvas to the right.
     </p>);
-const Documentation = () => <p>Documentation</p>;
 
-function DocumentationViewer() {
-    return (<section className="documentation">
-        <TabControl>
-            <Info label="Info" />
-            <Documentation label="Documentation" />
-        </TabControl>
-    </section>);
+const HelpText = {
+    "grid": `A Grid is a container that lays out its children in rows and columns.
+        Row/columns can be proportionally sized or given a fixed size.
+        `,
+    "margins": `Margins are the empty space between some UI element
+        and its parent container. You can give horizontal or vertical margins`
+};
+
+class Documentation extends React.Component {
+
+    constructor(props) {
+        super(props);
+        this.state = {help: ''};
+    }
+
+    static getDerivedStateFromProps(props, state) {
+
+        if (state.candidate !== props.candidate) {
+            return {
+                help: HelpText[props.candidate] || ""
+            };
+        }
+
+        return null;
+    }
+
+    render() {
+        return <p className="docViewer">{this.state.help}</p>;
+    }
+}
+
+class DocumentationViewer extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {candidate: props.candidate};
+    }
+
+    static getDerivedStateFromProps(props, state) {
+
+        if (state.candidate !== props.candidate) {
+            return {
+                candidate: props.candidate
+            };
+        }
+
+        return null;
+    }
+
+    render() {
+        return (<section className="documentation">
+            <TabControl>
+                <Info label="Info" />
+                <Documentation label="Documentation" candidate={this.state.candidate} />
+            </TabControl>
+        </section>);
+    }
 }
 
 export default DocumentationViewer;

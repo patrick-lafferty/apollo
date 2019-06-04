@@ -35,6 +35,7 @@ class Layout extends React.Component {
     constructor(props) {
         super(props);
         this.handleChange = this.handleChange.bind(this);
+        this.handleKeyPress = this.handleKeyPress.bind(this);
     }
 
     handleChange(e) {
@@ -45,8 +46,42 @@ class Layout extends React.Component {
       //  }, 1000);
     }
 
+    handleKeyPress(e) {
+		if (e.key === "F1") {
+			let cursorPosition = e.target.selectionStart;
+
+			if (e.target.value[cursorPosition] !== ' ') {
+				let start = cursorPosition;
+				let end = cursorPosition;
+				let buffer = e.target.value;
+
+				for (; start > 0; start--) {
+					if (!/[^\s(]/.test(buffer[start])) {
+						break;
+					}
+				}
+
+				for (; end < buffer.length; end++) {
+					if (!/[^\s(]/.test(buffer[end])) {
+						break;
+					}
+				}
+
+				let candidate = buffer.slice(start + 1, end);
+
+				if (candidate.length > 0) {
+					console.log(candidate);
+					this.props.showDocumentation(candidate);
+				}
+			}
+		}
+    }
+
     render() {
-        return (<textarea className='expand' onChange={this.handleChange} value={this.props.initialLayout}></textarea>);
+        return (<textarea className='expand'  
+          onChange={this.handleChange} 
+          onKeyDown={this.handleKeyPress}
+          value={this.props.initialLayout}></textarea>);
     }
 }
 
@@ -58,7 +93,10 @@ class Editor extends React.Component {
         return (
             <section className="editor">
                 <TabControl>
-                    <Layout label="Layout" onLayoutChanged={this.props.handleLayoutChanged} initialLayout={this.props.initialLayout}/>
+					<Layout label="Layout" 
+						onLayoutChanged={this.props.handleLayoutChanged} 
+						showDocumentation={this.props.showDocumentation}
+						initialLayout={this.props.initialLayout}/>
                     <Code label="Code"/>
                 </TabControl>
             </section>
