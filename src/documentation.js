@@ -28,13 +28,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import React from 'react';
 import './css/documentation.css';
+import TabControl from './tab_control';
+
+const Info = () => (<p>This is a live demo of Apollo UI layouts 
+        for the <a href="https://saturn-os.org" target="blank">Saturn OS</a>
+        <br/>
+        <br/>
+
+        You can edit the layout in the editor below, which will be parsed
+        and rendered in the canvas to the right.
+    </p>);
+const Documentation = () => <p>Documentation</p>;
 
 function DocumentationViewer() {
-    return (<section className="documentation">Documentation
-        <br/>
-        <p>TODO: This area will show information about things under the cursor 
-            in the layout editor.
-        </p>
+    return (<section className="documentation">
+        <TabControl>
+            <Info label="Info" />
+            <Documentation label="Documentation" />
+        </TabControl>
     </section>);
 }
 

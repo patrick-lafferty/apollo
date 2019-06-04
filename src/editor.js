@@ -58,8 +58,8 @@ class Editor extends React.Component {
         return (
             <section className="editor">
                 <TabControl>
-                    <Layout label="layout" onLayoutChanged={this.props.handleLayoutChanged} initialLayout={this.props.initialLayout}/>
-                    <Code label="code"/>
+                    <Layout label="Layout" onLayoutChanged={this.props.handleLayoutChanged} initialLayout={this.props.initialLayout}/>
+                    <Code label="Code"/>
                 </TabControl>
             </section>
         );
