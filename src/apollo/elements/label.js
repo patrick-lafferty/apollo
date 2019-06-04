@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import {Maybe} from '../../maybe';
 import {SExpType, getConstructor} from '../parsing';
 import {parseElement} from './element';
-import {UIElement, adjustForAlignment} from './uielement';
+import {UIElement/*, adjustForAlignment*/} from './uielement';
 import {Configuration} from './configuration';
 
 export class LabelConfiguration extends Configuration {
