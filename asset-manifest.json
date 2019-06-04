@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/apollo/static/css/main.71639a60.chunk.css",
-    "main.js": "/apollo/static/js/main.e64c08b3.chunk.js",
-    "main.js.map": "/apollo/static/js/main.e64c08b3.chunk.js.map",
+    "main.css": "/apollo/static/css/main.6f27c08a.chunk.css",
+    "main.js": "/apollo/static/js/main.1a666ec8.chunk.js",
+    "main.js.map": "/apollo/static/js/main.1a666ec8.chunk.js.map",
     "runtime~main.js": "/apollo/static/js/runtime~main.cad1bf2f.js",
     "runtime~main.js.map": "/apollo/static/js/runtime~main.cad1bf2f.js.map",
     "static/js/2.40607e38.chunk.js": "/apollo/static/js/2.40607e38.chunk.js",
     "static/js/2.40607e38.chunk.js.map": "/apollo/static/js/2.40607e38.chunk.js.map",
     "index.html": "/apollo/index.html",
-    "precache-manifest.f98497a4a0ee0b8b124da0f41a0992f4.js": "/apollo/precache-manifest.f98497a4a0ee0b8b124da0f41a0992f4.js",
+    "precache-manifest.9d06d1d70e418b3298499bc746b65d27.js": "/apollo/precache-manifest.9d06d1d70e418b3298499bc746b65d27.js",
     "service-worker.js": "/apollo/service-worker.js",
-    "static/css/main.71639a60.chunk.css.map": "/apollo/static/css/main.71639a60.chunk.css.map"
+    "static/css/main.6f27c08a.chunk.css.map": "/apollo/static/css/main.6f27c08a.chunk.css.map"
   }
 }
